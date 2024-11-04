@@ -1,10 +1,22 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Grid2 } from "@mui/material";
-import AddButton from "./components/Button";
+import CustomButton from "./components/CustomButton";
+import TaskInputForm from "./components/TaskInputForm";
+import axios from "axios";
 import TaskCard from "./components/TaskCard";
 
 const App = () => {
-  const [task, setTask] = useState(false);
+  const [visible, isVisible] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const fetchAllTasks = async () => {
+    let response = await axios.get(`${import.meta.env.VITE_BASE_URL}/task`);
+    setTasks(response.data.tasks);
+  };
+
+  useEffect(() => {
+    fetchAllTasks();
+  }, []);
+
   return (
     <Grid2
       container
@@ -14,16 +26,16 @@ const App = () => {
       flexDirection={"column"}
       alignItems={"center"}
     >
-      <AddButton
-        label="+"
+      <CustomButton
+        label="Add Task"
         id="add"
         onClick={() => {
           console.log("add button clicked");
-          setTask(!task);
+          isVisible(!visible);
         }}
       />
-      {task && <TaskCard />}
-      <Grid2> Home</Grid2>
+      {visible && <TaskInputForm />}
+      {tasks ? <TaskCard tasks={tasks} /> : null}
     </Grid2>
   );
 };
