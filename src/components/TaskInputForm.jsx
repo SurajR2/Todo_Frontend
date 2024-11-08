@@ -5,11 +5,18 @@ import {
   FormControlLabel,
   Checkbox,
   Button,
+  Snackbar,
   FormGroup,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+
 import axios from "axios";
 
-const TaskInputFrom = () => {
+const TaskInputFrom = ({ onTaskUploaded }) => {
+  const [openSnackBar, setOpenSnackBar] = useState(false);
+  const [error, setError] = useState(false);
+
   const [task, setTask] = useState({
     title: "",
     description: "",
@@ -22,10 +29,38 @@ const TaskInputFrom = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const url = import.meta.env.VITE_BASE_URL;
-    let response = await axios.post(`${url}/task`, task);
-    console.log(response.status);
+    setError(false);
+    try {
+      let response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/task`,
+        task
+      );
+      if (response.status === 201) {
+        setOpenSnackBar(true);
+        onTaskUploaded();
+        setTask({ title: "", description: "", status: false });
+      }
+    } catch (error) {
+      setError(true);
+      console.log("error", error);
+    }
   };
+
+  const handleCloseSnackBar = () => {
+    setOpenSnackBar(false);
+  };
+  const action = (
+    <>
+      <IconButton
+        size="small"
+        aria-label="close"
+        color="inherit"
+        onClick={handleCloseSnackBar}
+      >
+        <CloseIcon fontSize="small" />
+      </IconButton>
+    </>
+  );
   return (
     <Card
       sx={{
@@ -61,7 +96,7 @@ const TaskInputFrom = () => {
             control={
               <Checkbox
                 name="status"
-                value={task.status}
+                checked={task.status}
                 onChange={handleChange}
               />
             }
@@ -72,6 +107,13 @@ const TaskInputFrom = () => {
           </Button>
         </FormGroup>
       </form>
+      <Snackbar
+        open={openSnackBar}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackBar}
+        message="Task Uploaded Successfully"
+        action={action}
+      />
     </Card>
   );
 };

@@ -6,16 +6,33 @@ import axios from "axios";
 import TaskCard from "./components/TaskCard";
 
 const App = () => {
-  const [visible, isVisible] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [tasks, setTasks] = useState([]);
-  const fetchAllTasks = async () => {
-    let response = await axios.get(`${import.meta.env.VITE_BASE_URL}/task`);
-    setTasks(response.data.tasks);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const fetchTask = async () => {
+    try {
+      setError(false);
+      setLoading(true);
+      let response = await axios.get(`${import.meta.env.VITE_BASE_URL}/task`);
+      setTasks(response.data.tasks);
+    } catch (error) {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchAllTasks();
+    fetchTask();
   }, []);
+  const handelTaskUploaded = async () => {
+    await fetchTask();
+
+    setTimeout(() => setVisible(false), 3500);
+  };
+
+  const toggleTaskForm = () => setVisible((prevVisible) => !prevVisible);
 
   return (
     <Grid2
@@ -26,16 +43,11 @@ const App = () => {
       flexDirection={"column"}
       alignItems={"center"}
     >
-      <CustomButton
-        label="Add Task"
-        id="add"
-        onClick={() => {
-          console.log("add button clicked");
-          isVisible(!visible);
-        }}
-      />
-      {visible && <TaskInputForm />}
-      {tasks ? <TaskCard tasks={tasks} /> : null}
+      <CustomButton label="Add Task" id="add" onClick={toggleTaskForm} />
+      {visible && <TaskInputForm onTaskUploaded={handelTaskUploaded} />}
+      {loading && <p>Loading....</p>}
+
+      {error ? <p>Error Fetching Tasks</p> : <TaskCard tasks={tasks} />}
     </Grid2>
   );
 };
