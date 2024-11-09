@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Grid2 } from "@mui/material";
-import CustomButton from "./components/CustomButton";
+import { Grid2, Fab, Popover, CircularProgress } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import TaskInputForm from "./components/TaskInputForm";
 import axios from "axios";
 import TaskCard from "./components/TaskCard";
 
 const App = () => {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const fetchTask = async () => {
     try {
       setError(false);
@@ -26,13 +27,15 @@ const App = () => {
   useEffect(() => {
     fetchTask();
   }, []);
-  const handelTaskUploaded = async () => {
-    await fetchTask();
 
-    setTimeout(() => setVisible(false), 3500);
+  const handleTaskUploaded = async () => {
+    await fetchTask();
+    setTimeout(() => setVisible(null), 3500); // Close Popover after task uploaded
   };
 
-  const toggleTaskForm = () => setVisible((prevVisible) => !prevVisible);
+  const toggleTaskForm = (event) => {
+    setVisible(visible ? null : event.currentTarget); // Open/Close Popover
+  };
 
   return (
     <Grid2
@@ -42,12 +45,45 @@ const App = () => {
       justifyContent={"center"}
       flexDirection={"column"}
       alignItems={"center"}
+      sx={{ position: "relative", minHeight: "100vh", paddingBottom: 4 }}
     >
-      <CustomButton label="Add Task" id="add" onClick={toggleTaskForm} />
-      {visible && <TaskInputForm onTaskUploaded={handelTaskUploaded} />}
-      {loading && <p>Loading....</p>}
+      {loading && <CircularProgress />}
+      {error ? (
+        <p>Error Fetching Tasks</p>
+      ) : (
+        <TaskCard tasks={tasks} onTaskUpdate={fetchTask} />
+      )}
 
-      {error ? <p>Error Fetching Tasks</p> : <TaskCard tasks={tasks} />}
+      <Popover
+        open={Boolean(visible)}
+        anchorEl={visible}
+        onClose={() => setVisible(null)}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+      >
+        <TaskInputForm onTaskUploaded={handleTaskUploaded} />
+      </Popover>
+
+      <Fab
+        color="primary"
+        aria-label="add"
+        onClick={toggleTaskForm}
+        style={{
+          position: "fixed",
+          bottom: "5%",
+          right: "5%",
+          backgroundColor: "#ffc300",
+          color: "black",
+        }}
+      >
+        <AddIcon />
+      </Fab>
     </Grid2>
   );
 };
